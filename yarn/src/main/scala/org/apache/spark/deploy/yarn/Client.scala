@@ -167,6 +167,7 @@ private[spark] class Client(
     val capability = Records.newRecord(classOf[Resource])
     capability.setMemory(args.amMemory + amMemoryOverhead)
     capability.setVirtualCores(args.amCores)
+    capability.setGpuMemory(args.amGpuMemory)
     appContext.setResource(capability)
     appContext
   }
@@ -206,9 +207,27 @@ private[spark] class Client(
       throw new IllegalArgumentException(s"Required AM memory (${args.amMemory}" +
         s"+$amMemoryOverhead MB) is above the max threshold ($maxMem MB) of this cluster!")
     }
+
+    // GPU Memory
+    val maxGpuMem = newAppResponse.getMaximumResourceCapability().getGpuMemory()
+    logInfo("Verifying our application has not requested more than the maximum " +
+      s"GPU memory capability of the cluster ($maxGpuMem MB per container)")
+    val executorGpuMem = args.executorGpuMemory
+    if (executorGpuMem > maxGpuMem) {
+      throw new IllegalArgumentException(s"Required executor GPU memory (${args.executorGpuMemory}" +
+        s"+ MB) is above the max threshold ($maxGpuMem MB) of this cluster!")
+    }
+    val amGpuMem = args.amGpuMemory
+    if (amGpuMem > maxGpuMem) {
+      throw new IllegalArgumentException(s"Required AM GPU memory (${args.amGpuMemory}" +
+        s"+ MB) is above the max threshold ($maxGpuMem MB) of this cluster!")
+    }
+
     logInfo("Will allocate AM container, with %d MB memory including %d MB overhead".format(
       amMem,
       amMemoryOverhead))
+    logInfo("Will allocate AM container, with %d MB memory".format(
+      amGpuMem))
 
     // We could add checks to make sure the entire cluster has enough resources but that involves
     // getting all the node reports and computing ourselves.
@@ -695,6 +714,7 @@ private[spark] class Client(
         userArgs ++ Seq(
           "--executor-memory", args.executorMemory.toString + "m",
           "--executor-cores", args.executorCores.toString,
+          "--executor-gpu-memory", args.executorGpuMemory.toString + "m",
           "--num-executors ", args.numExecutors.toString)
 
     // Command for the ApplicationMaster

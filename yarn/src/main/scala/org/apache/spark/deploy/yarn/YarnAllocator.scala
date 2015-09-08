@@ -96,8 +96,10 @@ private[yarn] class YarnAllocator(
     math.max((MEMORY_OVERHEAD_FACTOR * executorMemory).toInt, MEMORY_OVERHEAD_MIN))
   // Number of cores per executor.
   protected val executorCores = args.executorCores
+  // Executor GPU memory in MB.
+  protected val executorGpuMemory = args.executorGpuMemory
   // Resource capability requested for each executors
-  private val resource = Resource.newInstance(executorMemory + memoryOverhead, executorCores)
+  private val resource = Resource.newInstance(executorMemory + memoryOverhead, executorCores, executorGpuMemory)
 
   private val launcherPool = new ThreadPoolExecutor(
     // max pool size of Integer.MAX_VALUE is ignored because we use an unbounded queue
@@ -208,7 +210,7 @@ private[yarn] class YarnAllocator(
 
     if (missing > 0) {
       logInfo(s"Will request $missing executor containers, each with ${resource.getVirtualCores} " +
-        s"cores and ${resource.getMemory} MB memory including $memoryOverhead MB overhead")
+        s"cores and ${resource.getGpuMemory} MB GPU memory and ${resource.getMemory} MB memory including $memoryOverhead MB overhead")
 
       for (i <- 0 until missing) {
         val request = new ContainerRequest(resource, null, null, RM_REQUEST_PRIORITY)
@@ -297,7 +299,7 @@ private[yarn] class YarnAllocator(
     // memory, but use the asked vcore count for matching, effectively disabling matching on vcore
     // count.
     val matchingResource = Resource.newInstance(allocatedContainer.getResource.getMemory,
-          resource.getVirtualCores)
+          resource.getVirtualCores, allocatedContainer.getResource.getGpuMemory)
     val matchingRequests = amClient.getMatchingRequests(allocatedContainer.getPriority, location,
       matchingResource)
 
@@ -343,6 +345,7 @@ private[yarn] class YarnAllocator(
         executorHostname,
         executorMemory,
         executorCores,
+        executorGpuMemory,
         appAttemptId.getApplicationId.toString,
         securityMgr)
       if (launchContainers) {

@@ -62,7 +62,7 @@ class YarnAllocatorSuite extends SparkFunSuite with Matchers with BeforeAndAfter
 
   // Resource returned by YARN.  YARN can give larger containers than requested, so give 6 cores
   // instead of the 5 requested and 3 GB instead of the 2 requested.
-  val containerResource = Resource.newInstance(3072, 6)
+  val containerResource = Resource.newInstance(3072, 6, 1024)
 
   var rmClient: AMRMClient[ContainerRequest] = _
 
@@ -87,6 +87,7 @@ class YarnAllocatorSuite extends SparkFunSuite with Matchers with BeforeAndAfter
       "--num-executors", s"$maxExecutors",
       "--executor-cores", "5",
       "--executor-memory", "2048",
+      "--executor-gpu-memory", "512",
       "--jar", "somejar.jar",
       "--class", "SomeClass")
     new YarnAllocator(

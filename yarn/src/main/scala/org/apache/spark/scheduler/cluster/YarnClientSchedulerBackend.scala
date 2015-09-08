@@ -81,13 +81,16 @@ private[spark] class YarnClientSchedulerBackend(
         ("--executor-memory", "SPARK_EXECUTOR_MEMORY", "spark.executor.memory"),
         ("--executor-cores", "SPARK_WORKER_CORES", "spark.executor.cores"),
         ("--executor-cores", "SPARK_EXECUTOR_CORES", "spark.executor.cores"),
+        ("--executor-gpu-memory", "SPARK_WORKER_GPU_MEMORY", "spark.executor.gpuMemory"),
+        ("--executor-gpu-memory", "SPARK_EXECUTOR_GPU_MEMORY", "spark.executor.gpuMemory"),
         ("--queue", "SPARK_YARN_QUEUE", "spark.yarn.queue")
       )
     // Warn against the following deprecated environment variables: env var -> suggestion
     val deprecatedEnvVars = Map(
       "SPARK_WORKER_INSTANCES" -> "SPARK_WORKER_INSTANCES or --num-executors through spark-submit",
       "SPARK_WORKER_MEMORY" -> "SPARK_EXECUTOR_MEMORY or --executor-memory through spark-submit",
-      "SPARK_WORKER_CORES" -> "SPARK_EXECUTOR_CORES or --executor-cores through spark-submit")
+      "SPARK_WORKER_CORES" -> "SPARK_EXECUTOR_CORES or --executor-cores through spark-submit",
+      "SPARK_WORKER_GPU_MEMORY" -> "SPARK_EXECUTOR_GPU_MEMORY or --executor-gpu-memory through spark-submit")
     optionTuples.foreach { case (optionName, envVar, sparkProp) =>
       if (sc.getConf.contains(sparkProp)) {
         extraArgs += (optionName, sc.getConf.get(sparkProp))

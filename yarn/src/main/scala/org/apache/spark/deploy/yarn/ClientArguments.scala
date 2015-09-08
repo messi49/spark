@@ -36,10 +36,12 @@ private[spark] class ClientArguments(args: Array[String], sparkConf: SparkConf) 
   var userArgs: ArrayBuffer[String] = new ArrayBuffer[String]()
   var executorMemory = 1024 // MB
   var executorCores = 1
+  var executorGpuMemory = 0 // MB
   var numExecutors = DEFAULT_NUMBER_EXECUTORS
   var amQueue = sparkConf.get("spark.yarn.queue", "default")
   var amMemory: Int = 512 // MB
   var amCores: Int = 1
+  var amGpuMemory: Int = 0 // MB
   var appName: String = "Spark"
   var priority = 0
   var principal: String = null
@@ -48,11 +50,13 @@ private[spark] class ClientArguments(args: Array[String], sparkConf: SparkConf) 
 
   private var driverMemory: Int = 512 // MB
   private var driverCores: Int = 1
+  private var driverGpuMemory: Int = 0 // MB
   private val driverMemOverheadKey = "spark.yarn.driver.memoryOverhead"
   private val amMemKey = "spark.yarn.am.memory"
   private val amMemOverheadKey = "spark.yarn.am.memoryOverhead"
   private val driverCoresKey = "spark.driver.cores"
   private val amCoresKey = "spark.yarn.am.cores"
+  private val amGpuMemKey = "spark.yarn.am.gpuMemory"
   private val isDynamicAllocationEnabled =
     sparkConf.getBoolean("spark.dynamicAllocation.enabled", false)
 
@@ -125,6 +129,7 @@ private[spark] class ClientArguments(args: Array[String], sparkConf: SparkConf) 
       }
       amMemory = driverMemory
       amCores = driverCores
+      amGpuMemory = driverGpuMemory
     } else {
       for (key <- Seq(driverMemOverheadKey, driverCoresKey)) {
         if (sparkConf.contains(key)) {
@@ -137,6 +142,9 @@ private[spark] class ClientArguments(args: Array[String], sparkConf: SparkConf) 
       sparkConf.getOption(amCoresKey)
         .map(_.toInt)
         .foreach { cores => amCores = cores }
+      sparkConf.getOption(amGpuMemKey)
+        .map(Utils.memoryStringToMb)
+        .foreach { gmem => amGpuMemory = gmem }
     }
   }
 
@@ -183,6 +191,13 @@ private[spark] class ClientArguments(args: Array[String], sparkConf: SparkConf) 
           driverCores = value
           args = tail
 
+        case ("--master-gpu-memory" | "--driver-gpu-memory") :: MemoryParam(value) :: tail =>
+          if (args(0) == "--master-gpu-memory") {
+            println("--master-gpu-memory is deprecated. Use --driver-gpu-memory instead.")
+          }
+          driverGpuMemory = value
+          args = tail
+
         case ("--num-workers" | "--num-executors") :: IntParam(value) :: tail =>
           if (args(0) == "--num-workers") {
             println("--num-workers is deprecated. Use --num-executors instead.")
@@ -207,6 +222,13 @@ private[spark] class ClientArguments(args: Array[String], sparkConf: SparkConf) 
             println("--worker-cores is deprecated. Use --executor-cores instead.")
           }
           executorCores = value
+          args = tail
+
+        case ("--worker-gpu-memory" | "--executor-gpu-memory") :: MemoryParam(value) :: tail =>
+          if (args(0) == "--worker-gpu-memory") {
+            println("--worker-gpu-memory is deprecated. Use --executor-gpu-memory instead.")
+          }
+          executorGpuMemory = value
           args = tail
 
         case ("--queue") :: value :: tail =>
@@ -260,27 +282,29 @@ private[spark] class ClientArguments(args: Array[String], sparkConf: SparkConf) 
       """
       |Usage: org.apache.spark.deploy.yarn.Client [options]
       |Options:
-      |  --jar JAR_PATH           Path to your application's JAR file (required in yarn-cluster
-      |                           mode)
-      |  --class CLASS_NAME       Name of your application's main class (required)
-      |  --primary-py-file        A main Python file
-      |  --primary-r-file         A main R file
-      |  --arg ARG                Argument to be passed to your application's main class.
-      |                           Multiple invocations are possible, each will be passed in order.
-      |  --num-executors NUM      Number of executors to start (Default: 2)
-      |  --executor-cores NUM     Number of cores per executor (Default: 1).
-      |  --driver-memory MEM      Memory for driver (e.g. 1000M, 2G) (Default: 512 Mb)
-      |  --driver-cores NUM       Number of cores used by the driver (Default: 1).
-      |  --executor-memory MEM    Memory per executor (e.g. 1000M, 2G) (Default: 1G)
-      |  --name NAME              The name of your application (Default: Spark)
-      |  --queue QUEUE            The hadoop queue to use for allocation requests (Default:
-      |                           'default')
-      |  --addJars jars           Comma separated list of local jars that want SparkContext.addJar
-      |                           to work with.
-      |  --py-files PY_FILES      Comma-separated list of .zip, .egg, or .py files to
-      |                           place on the PYTHONPATH for Python apps.
-      |  --files files            Comma separated list of files to be distributed with the job.
-      |  --archives archives      Comma separated list of archives to be distributed with the job.
+      |  --jar JAR_PATH             Path to your application's JAR file (required in yarn-cluster
+      |                             mode)
+      |  --class CLASS_NAME         Name of your application's main class (required)
+      |  --primary-py-file          A main Python file
+      |  --primary-r-file           A main R file
+      |  --arg ARG                  Argument to be passed to your application's main class.
+      |                             Multiple invocations are possible, each will be passed in order.
+      |  --num-executors NUM        Number of executors to start (Default: 2)
+      |  --executor-cores NUM       Number of cores per executor (Default: 1).
+      |  --driver-memory MEM        Memory for driver (e.g. 1000M, 2G) (Default: 512 Mb)
+      |  --driver-cores NUM         Number of cores used by the driver (Default: 1).
+      |  --driver-gpu-memory MEM    GPU Memory for driver (e.g. 1000M, 2G) (Default: 0 Mb)
+      |  --executor-memory MEM      Memory per executor (e.g. 1000M, 2G) (Default: 1G)
+      |  --executor-gpu-memory MEM  GPU Memory per executor (e.g. 1000M, 2G) (Default: 1G)
+      |  --name NAME                The name of your application (Default: Spark)
+      |  --queue QUEUE              The hadoop queue to use for allocation requests (Default:
+      |                             'default')
+      |  --addJars jars             Comma separated list of local jars that want SparkContext.addJar
+      |                             to work with.
+      |  --py-files PY_FILES        Comma-separated list of .zip, .egg, or .py files to
+      |                             place on the PYTHONPATH for Python apps.
+      |  --files files              Comma separated list of files to be distributed with the job.
+      |  --archives archives        Comma separated list of archives to be distributed with the job.
       """.stripMargin
   }
 }

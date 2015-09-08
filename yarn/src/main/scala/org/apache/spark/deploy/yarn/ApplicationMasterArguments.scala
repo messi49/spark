@@ -30,6 +30,7 @@ class ApplicationMasterArguments(val args: Array[String]) {
   var userArgs: Seq[String] = Seq[String]()
   var executorMemory = 1024
   var executorCores = 1
+  var executorGpuMemory = 0
   var numExecutors = DEFAULT_NUMBER_EXECUTORS
 
   parseArgs(args.toList)
@@ -78,6 +79,9 @@ class ApplicationMasterArguments(val args: Array[String]) {
         case ("--worker-cores" | "--executor-cores") :: IntParam(value) :: tail =>
           executorCores = value
           args = tail
+        case ("--worker-gpu-memory" | "--executor-gpu-memory") :: MemoryParam(value) :: tail =>
+          executorGpuMemory = value
+          args = tail
 
         case _ =>
           printUsageAndExit(1, args)
@@ -110,6 +114,7 @@ class ApplicationMasterArguments(val args: Array[String]) {
       |  --num-executors NUM    Number of executors to start (Default: 2)
       |  --executor-cores NUM   Number of cores for the executors (Default: 1)
       |  --executor-memory MEM  Memory per executor (e.g. 1000M, 2G) (Default: 1G)
+      |  --executor-gpu-memory MEM GPU Memory per executor (e.g. 1000M, 2G) (Default: 0G)
       """.stripMargin)
     System.exit(exitCode)
   }
