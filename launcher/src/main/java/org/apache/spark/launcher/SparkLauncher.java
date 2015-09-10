@@ -38,6 +38,8 @@ public class SparkLauncher {
 
   /** Configuration key for the driver memory. */
   public static final String DRIVER_MEMORY = "spark.driver.memory";
+  /** Configuration key for the driver GPU memory. */
+  public static final String DRIVER_GPU_MEMORY = "spark.driver.gpuMemory";
   /** Configuration key for the driver class path. */
   public static final String DRIVER_EXTRA_CLASSPATH = "spark.driver.extraClassPath";
   /** Configuration key for the driver VM options. */
@@ -55,6 +57,8 @@ public class SparkLauncher {
   public static final String EXECUTOR_EXTRA_LIBRARY_PATH = "spark.executor.extraLibraryPath";
   /** Configuration key for the number of executor CPU cores. */
   public static final String EXECUTOR_CORES = "spark.executor.cores";
+  /** Configuration key for the executor GPU memory. */
+  public static final String EXECUTOR_GPU_MEMORY = "spark.executor.gpuMemory";
 
   private final SparkSubmitCommandBuilder builder;
 

@@ -69,10 +69,13 @@ class SparkSubmitOptionParser {
   // YARN-only options.
   protected final String ARCHIVES = "--archives";
   protected final String EXECUTOR_CORES = "--executor-cores";
+  protected final String EXECUTOR_GPU_MEMORY = "--executor-gpu-memory";
   protected final String KEYTAB = "--keytab";
   protected final String NUM_EXECUTORS = "--num-executors";
   protected final String PRINCIPAL = "--principal";
   protected final String QUEUE = "--queue";
+  protected final String DRIVER_GPU_MEMORY = "--driver-gpu-memory";
+
 
   /**
    * This is the canonical list of spark-submit options. Each entry in the array contains the
@@ -90,10 +93,12 @@ class SparkSubmitOptionParser {
     { CONF, "-c" },
     { DEPLOY_MODE },
     { DRIVER_CLASS_PATH },
+    { DRIVER_GPU_MEMORY },
     { DRIVER_CORES },
     { DRIVER_JAVA_OPTIONS },
     { DRIVER_LIBRARY_PATH },
     { DRIVER_MEMORY },
+    { EXECUTOR_GPU_MEMORY },
     { EXECUTOR_CORES },
     { EXECUTOR_MEMORY },
     { FILES },

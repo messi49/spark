@@ -416,6 +416,8 @@ object SparkSubmit {
       OptionAssigner(args.ivyRepoPath, ALL_CLUSTER_MGRS, CLIENT, sysProp = "spark.jars.ivy"),
       OptionAssigner(args.driverMemory, ALL_CLUSTER_MGRS, CLIENT,
         sysProp = "spark.driver.memory"),
+      OptionAssigner(args.driverGpuMemory, ALL_CLUSTER_MGRS, CLIENT,
+        sysProp = "spark.driver.gpuMemory"),
       OptionAssigner(args.driverExtraClassPath, ALL_CLUSTER_MGRS, ALL_DEPLOY_MODES,
         sysProp = "spark.driver.extraClassPath"),
       OptionAssigner(args.driverExtraJavaOptions, ALL_CLUSTER_MGRS, ALL_DEPLOY_MODES,
@@ -427,6 +429,7 @@ object SparkSubmit {
       OptionAssigner(args.queue, YARN, CLIENT, sysProp = "spark.yarn.queue"),
       OptionAssigner(args.numExecutors, YARN, CLIENT, sysProp = "spark.executor.instances"),
       OptionAssigner(args.executorCores, YARN, CLIENT, sysProp = "spark.executor.cores"),
+      OptionAssigner(args.executorGpuMemory, YARN, CLIENT, sysProp = "spark.executor.gpuMemory"),
       OptionAssigner(args.files, YARN, CLIENT, sysProp = "spark.yarn.dist.files"),
       OptionAssigner(args.archives, YARN, CLIENT, sysProp = "spark.yarn.dist.archives"),
 
@@ -434,10 +437,12 @@ object SparkSubmit {
       OptionAssigner(args.name, YARN, CLUSTER, clOption = "--name"),
       OptionAssigner(args.driverMemory, YARN, CLUSTER, clOption = "--driver-memory"),
       OptionAssigner(args.driverCores, YARN, CLUSTER, clOption = "--driver-cores"),
+      OptionAssigner(args.driverGpuMemory, YARN, CLUSTER, clOption = "--driver-gpu-memory"),
       OptionAssigner(args.queue, YARN, CLUSTER, clOption = "--queue"),
       OptionAssigner(args.numExecutors, YARN, CLUSTER, clOption = "--num-executors"),
       OptionAssigner(args.executorMemory, YARN, CLUSTER, clOption = "--executor-memory"),
       OptionAssigner(args.executorCores, YARN, CLUSTER, clOption = "--executor-cores"),
+      OptionAssigner(args.executorGpuMemory, YARN, CLUSTER, clOption = "--executor-gpu-memory"),
       OptionAssigner(args.files, YARN, CLUSTER, clOption = "--files"),
       OptionAssigner(args.archives, YARN, CLUSTER, clOption = "--archives"),
       OptionAssigner(args.jars, YARN, CLUSTER, clOption = "--addJars"),
@@ -509,6 +514,7 @@ object SparkSubmit {
         if (args.supervise) { childArgs += "--supervise" }
         Option(args.driverMemory).foreach { m => childArgs += ("--memory", m) }
         Option(args.driverCores).foreach { c => childArgs += ("--cores", c) }
+        Option(args.driverGpuMemory).foreach { g => childArgs += ("--gpuMemory", g) }
         childArgs += "launch"
         childArgs += (args.master, args.primaryResource, args.mainClass)
       }

@@ -38,9 +38,11 @@ private[deploy] class SparkSubmitArguments(args: Seq[String], env: Map[String, S
   var deployMode: String = null
   var executorMemory: String = null
   var executorCores: String = null
+  var executorGpuMemory: String = null
   var totalExecutorCores: String = null
   var propertiesFile: String = null
   var driverMemory: String = null
+  var driverGpuMemory: String = null
   var driverExtraClassPath: String = null
   var driverExtraLibraryPath: String = null
   var driverExtraJavaOptions: String = null
@@ -153,6 +155,10 @@ private[deploy] class SparkSubmitArguments(args: Seq[String], env: Map[String, S
     driverCores = Option(driverCores)
       .orElse(sparkProperties.get("spark.driver.cores"))
       .orNull
+    driverGpuMemory = Option(driverGpuMemory)
+      .orElse(sparkProperties.get("spark.driver.gpuMemory"))
+      .orElse(env.get("SPARK_DRIVER_GPU_MEMORY"))
+      .orNull
     executorMemory = Option(executorMemory)
       .orElse(sparkProperties.get("spark.executor.memory"))
       .orElse(env.get("SPARK_EXECUTOR_MEMORY"))
@@ -162,6 +168,10 @@ private[deploy] class SparkSubmitArguments(args: Seq[String], env: Map[String, S
       .orNull
     totalExecutorCores = Option(totalExecutorCores)
       .orElse(sparkProperties.get("spark.cores.max"))
+      .orNull
+    executorGpuMemory = Option(executorGpuMemory)
+      .orElse(sparkProperties.get("spark.executor.gpuMemory"))
+      .orElse(env.get("SPARK_EXECUTOR_GPU_MEMORY"))
       .orNull
     name = Option(name).orElse(sparkProperties.get("spark.app.name")).orNull
     jars = Option(jars).orElse(sparkProperties.get("spark.jars")).orNull
@@ -272,10 +282,12 @@ private[deploy] class SparkSubmitArguments(args: Seq[String], env: Map[String, S
     |  deployMode              $deployMode
     |  executorMemory          $executorMemory
     |  executorCores           $executorCores
+    |  executorGpuMemory       $executorGpuMemory
     |  totalExecutorCores      $totalExecutorCores
     |  propertiesFile          $propertiesFile
     |  driverMemory            $driverMemory
     |  driverCores             $driverCores
+    |  driverGpuMemory         $driverGpuMemory
     |  driverExtraClassPath    $driverExtraClassPath
     |  driverExtraLibraryPath  $driverExtraLibraryPath
     |  driverExtraJavaOptions  $driverExtraJavaOptions
@@ -321,6 +333,9 @@ private[deploy] class SparkSubmitArguments(args: Seq[String], env: Map[String, S
       case NUM_EXECUTORS =>
         numExecutors = value
 
+      case EXECUTOR_GPU_MEMORY =>
+        executorGpuMemory = value
+
       case TOTAL_EXECUTOR_CORES =>
         totalExecutorCores = value
 
@@ -335,6 +350,9 @@ private[deploy] class SparkSubmitArguments(args: Seq[String], env: Map[String, S
 
       case DRIVER_CORES =>
         driverCores = value
+
+      case DRIVER_GPU_MEMORY =>
+        driverGpuMemory = value
 
       case DRIVER_CLASS_PATH =>
         driverExtraClassPath = value
@@ -506,10 +524,12 @@ private[deploy] class SparkSubmitArguments(args: Seq[String], env: Map[String, S
         | Spark standalone and YARN only:
         |  --executor-cores NUM        Number of cores per executor. (Default: 1 in YARN mode,
         |                              or all available cores on the worker in standalone mode)
+        |  --executor-gpu-memory MEM   GPU Memory per executor (e.g. 1000M, 2G) (Default: 0G).
         |
         | YARN-only:
         |  --driver-cores NUM          Number of cores used by the driver, only in cluster mode
         |                              (Default: 1).
+        |  --driver-gpu-memory MEM     GPU Memory for driver (e.g. 1000M, 2G) (Default: 0M).
         |  --queue QUEUE_NAME          The YARN queue to submit to (Default: "default").
         |  --num-executors NUM         Number of executors to launch (Default: 2).
         |  --archives ARCHIVES         Comma separated list of archives to be extracted into the

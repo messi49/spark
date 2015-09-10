@@ -40,6 +40,7 @@ private[deploy] class ClientArguments(args: Array[String]) {
   var supervise: Boolean = DEFAULT_SUPERVISE
   var memory: Int = DEFAULT_MEMORY
   var cores: Int = DEFAULT_CORES
+  var gpuMemory: Int = DEFAULT_GPU_MEMORY
   private var _driverOptions = ListBuffer[String]()
   def driverOptions: Seq[String] = _driverOptions.toSeq
 
@@ -55,6 +56,10 @@ private[deploy] class ClientArguments(args: Array[String]) {
 
     case ("--memory" | "-m") :: MemoryParam(value) :: tail =>
       memory = value
+      parse(tail)
+
+    case ("--gpuMemory" | "-g") :: MemoryParam(value) :: tail =>
+      gpuMemory = value
       parse(tail)
 
     case ("--supervise" | "-s") :: tail =>
@@ -104,11 +109,12 @@ private[deploy] class ClientArguments(args: Array[String]) {
       |Usage: DriverClient kill <active-master> <driver-id>
       |
       |Options:
-      |   -c CORES, --cores CORES        Number of cores to request (default: $DEFAULT_CORES)
-      |   -m MEMORY, --memory MEMORY     Megabytes of memory to request (default: $DEFAULT_MEMORY)
-      |   -s, --supervise                Whether to restart the driver on failure
-      |                                  (default: $DEFAULT_SUPERVISE)
-      |   -v, --verbose                  Print more debugging output
+      |   -c CORES, --cores CORES           Number of cores to request (default: $DEFAULT_CORES)
+      |   -m MEMORY, --memory MEMORY        Megabytes of memory to request (default: $DEFAULT_MEMORY)
+      |   -g GPU MEMORY, --gpuMemory MEMORY Megabytes of GPU memory to request (default: $DEFAULT_GPU_MEMORY)
+      |   -s, --supervise                   Whether to restart the driver on failure
+      |                                     (default: $DEFAULT_SUPERVISE)
+      |   -v, --verbose                     Print more debugging output
      """.stripMargin
     System.err.println(usage)
     System.exit(exitCode)
@@ -118,6 +124,7 @@ private[deploy] class ClientArguments(args: Array[String]) {
 private[deploy] object ClientArguments {
   val DEFAULT_CORES = 1
   val DEFAULT_MEMORY = 512 // MB
+  val DEFAULT_GPU_MEMORY = 0 // MB
   val DEFAULT_SUPERVISE = false
 
   def isValidJarUrl(s: String): Boolean = {
