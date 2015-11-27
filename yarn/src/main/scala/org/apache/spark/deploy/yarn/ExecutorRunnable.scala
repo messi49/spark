@@ -84,7 +84,8 @@ class ExecutorRunnable(
     credentials.writeTokenStorageToStream(dob)
     ctx.setTokens(ByteBuffer.wrap(dob.getData()))
 
-    val commands = prepareCommand(masterAddress, slaveId, hostname, executorMemory, executorCores, executorGpuMemory,
+    val commands = prepareCommand(masterAddress, slaveId, hostname,
+      executorMemory, executorCores, executorGpuMemory,
       appId, localResources)
 
     logInfo(s"Setting up executor with environment: $env")

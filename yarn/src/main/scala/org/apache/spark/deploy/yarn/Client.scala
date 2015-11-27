@@ -214,8 +214,8 @@ private[spark] class Client(
       s"GPU memory capability of the cluster ($maxGpuMem MB per container)")
     val executorGpuMem = args.executorGpuMemory
     if (executorGpuMem > maxGpuMem) {
-      throw new IllegalArgumentException(s"Required executor GPU memory (${args.executorGpuMemory}" +
-        s"+ MB) is above the max threshold ($maxGpuMem MB) of this cluster!")
+      throw new IllegalArgumentException(s"Required executor GPU memory (${args.executorGpuMemory}"
+        + s"+ MB) is above the max threshold ($maxGpuMem MB) of this cluster!")
     }
     val amGpuMem = args.amGpuMemory
     if (amGpuMem > maxGpuMem) {

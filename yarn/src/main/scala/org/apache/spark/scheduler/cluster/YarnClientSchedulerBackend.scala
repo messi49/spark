@@ -90,7 +90,8 @@ private[spark] class YarnClientSchedulerBackend(
       "SPARK_WORKER_INSTANCES" -> "SPARK_WORKER_INSTANCES or --num-executors through spark-submit",
       "SPARK_WORKER_MEMORY" -> "SPARK_EXECUTOR_MEMORY or --executor-memory through spark-submit",
       "SPARK_WORKER_CORES" -> "SPARK_EXECUTOR_CORES or --executor-cores through spark-submit",
-      "SPARK_WORKER_GPU_MEMORY" -> "SPARK_EXECUTOR_GPU_MEMORY or --executor-gpu-memory through spark-submit")
+      "SPARK_WORKER_GPU_MEMORY" ->
+        "SPARK_EXECUTOR_GPU_MEMORY or --executor-gpu-memory through spark-submit")
     optionTuples.foreach { case (optionName, envVar, sparkProp) =>
       if (sc.getConf.contains(sparkProp)) {
         extraArgs += (optionName, sc.getConf.get(sparkProp))
