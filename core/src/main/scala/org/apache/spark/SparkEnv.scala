@@ -56,6 +56,7 @@ import org.apache.spark.util.{RpcUtils, Utils}
 @DeveloperApi
 class SparkEnv (
     val executorId: String,
+    val gpuDeviceId: Int,
     private[spark] val rpcEnv: RpcEnv,
     val serializer: Serializer,
     val closureSerializer: Serializer,
@@ -185,11 +186,13 @@ object SparkEnv extends Logging {
     assert(conf.contains("spark.driver.port"), "spark.driver.port is not set on the driver!")
     val hostname = conf.get("spark.driver.host")
     val port = conf.get("spark.driver.port").toInt
+    val gpuDeviceId = 0
     create(
       conf,
       SparkContext.DRIVER_IDENTIFIER,
       hostname,
       port,
+      gpuDeviceId,
       isDriver = true,
       isLocal = isLocal,
       listenerBus = listenerBus,
@@ -207,12 +210,14 @@ object SparkEnv extends Logging {
       hostname: String,
       port: Int,
       numCores: Int,
+      gpuDeviceId: Int,
       isLocal: Boolean): SparkEnv = {
     val env = create(
       conf,
       executorId,
       hostname,
       port,
+      gpuDeviceId,
       isDriver = false,
       isLocal = isLocal,
       numUsableCores = numCores
@@ -229,6 +234,7 @@ object SparkEnv extends Logging {
       executorId: String,
       hostname: String,
       port: Int,
+      gpuDeviceId: Int,
       isDriver: Boolean,
       isLocal: Boolean,
       listenerBus: LiveListenerBus = null,
@@ -396,6 +402,7 @@ object SparkEnv extends Logging {
 
     val envInstance = new SparkEnv(
       executorId,
+      gpuDeviceId,
       rpcEnv,
       serializer,
       closureSerializer,

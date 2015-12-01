@@ -51,6 +51,7 @@ class ExecutorRunnable(
     executorMemory: Int,
     executorCores: Int,
     executorGpuMemory: Int,
+    executorGpuDeviceId: Int,
     appId: String,
     securityMgr: SecurityManager)
   extends Runnable with Logging {
@@ -85,7 +86,7 @@ class ExecutorRunnable(
     ctx.setTokens(ByteBuffer.wrap(dob.getData()))
 
     val commands = prepareCommand(masterAddress, slaveId, hostname,
-      executorMemory, executorCores, executorGpuMemory,
+      executorMemory, executorCores, executorGpuMemory, executorGpuDeviceId,
       appId, localResources)
 
     logInfo(s"Setting up executor with environment: $env")
@@ -127,6 +128,7 @@ class ExecutorRunnable(
       executorMemory: Int,
       executorCores: Int,
       executorGpuMemory: Int,
+      executorGpuDeviceId: Int,
       appId: String,
       localResources: HashMap[String, LocalResource]): List[String] = {
     // Extra options for the JVM
@@ -220,6 +222,7 @@ class ExecutorRunnable(
         "--executor-id", slaveId.toString,
         "--hostname", hostname.toString,
         "--cores", executorCores.toString,
+        "--gpu-device-id", executorGpuDeviceId.toString,
         "--app-id", appId) ++
       userClassPath ++
       Seq(

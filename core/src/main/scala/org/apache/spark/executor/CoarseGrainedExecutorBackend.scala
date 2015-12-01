@@ -41,6 +41,7 @@ private[spark] class CoarseGrainedExecutorBackend(
     executorId: String,
     hostPort: String,
     cores: Int,
+    gpuDeviceId: Int,
     userClassPath: Seq[URL],
     env: SparkEnv)
   extends ThreadSafeRpcEndpoint with ExecutorBackend with Logging {
@@ -137,6 +138,7 @@ private[spark] object CoarseGrainedExecutorBackend extends Logging {
       executorId: String,
       hostname: String,
       cores: Int,
+      gpuDeviceId: Int,
       appId: String,
       workerUrl: Option[String],
       userClassPath: Seq[URL]) {
@@ -178,7 +180,7 @@ private[spark] object CoarseGrainedExecutorBackend extends Logging {
       }
 
       val env = SparkEnv.createExecutorEnv(
-        driverConf, executorId, hostname, port, cores, isLocal = false)
+        driverConf, executorId, hostname, port, cores, gpuDeviceId, isLocal = false)
 
       // SparkEnv sets spark.driver.port so it shouldn't be 0 anymore.
       val boundPort = env.conf.getInt("spark.executor.port", 0)
@@ -187,7 +189,7 @@ private[spark] object CoarseGrainedExecutorBackend extends Logging {
       // Start the CoarseGrainedExecutorBackend endpoint.
       val sparkHostPort = hostname + ":" + boundPort
       env.rpcEnv.setupEndpoint("Executor", new CoarseGrainedExecutorBackend(
-        env.rpcEnv, driverUrl, executorId, sparkHostPort, cores, userClassPath, env))
+        env.rpcEnv, driverUrl, executorId, sparkHostPort, cores, gpuDeviceId, userClassPath, env))
       workerUrl.foreach { url =>
         env.rpcEnv.setupEndpoint("WorkerWatcher", new WorkerWatcher(env.rpcEnv, url))
       }
@@ -201,6 +203,7 @@ private[spark] object CoarseGrainedExecutorBackend extends Logging {
     var executorId: String = null
     var hostname: String = null
     var cores: Int = 0
+    var gpuDeviceId: Int = 0
     var appId: String = null
     var workerUrl: Option[String] = None
     val userClassPath = new mutable.ListBuffer[URL]()
@@ -219,6 +222,9 @@ private[spark] object CoarseGrainedExecutorBackend extends Logging {
           argv = tail
         case ("--cores") :: value :: tail =>
           cores = value.toInt
+          argv = tail
+        case ("--gpu-device-id") :: value :: tail =>
+          gpuDeviceId = value.toInt
           argv = tail
         case ("--app-id") :: value :: tail =>
           appId = value
@@ -242,7 +248,7 @@ private[spark] object CoarseGrainedExecutorBackend extends Logging {
       printUsageAndExit()
     }
 
-    run(driverUrl, executorId, hostname, cores, appId, workerUrl, userClassPath)
+    run(driverUrl, executorId, hostname, cores, gpuDeviceId, appId, workerUrl, userClassPath)
   }
 
   private def printUsageAndExit() = {
@@ -255,6 +261,7 @@ private[spark] object CoarseGrainedExecutorBackend extends Logging {
       |   --executor-id <executorId>
       |   --hostname <hostname>
       |   --cores <cores>
+      |   --gpu-device-id <gpuDeviceId>
       |   --app-id <appid>
       |   --worker-url <workerUrl>
       |   --user-class-path <url>

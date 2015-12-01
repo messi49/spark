@@ -653,6 +653,7 @@ class DAGScheduler(
         new TaskContextImpl(
           job.finalStage.id,
           job.partitions(0),
+          gpuDeviceId = 0,
           taskAttemptId = 0,
           attemptNumber = 0,
           taskMemoryManager = taskMemoryManager,

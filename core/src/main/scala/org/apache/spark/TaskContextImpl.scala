@@ -26,6 +26,7 @@ import scala.collection.mutable.ArrayBuffer
 private[spark] class TaskContextImpl(
     val stageId: Int,
     val partitionId: Int,
+    val gpuDeviceId: Int,
     override val taskAttemptId: Long,
     override val attemptNumber: Int,
     override val taskMemoryManager: TaskMemoryManager,

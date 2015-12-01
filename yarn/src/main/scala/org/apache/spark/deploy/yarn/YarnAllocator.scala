@@ -326,11 +326,13 @@ private[yarn] class YarnAllocator(
       val containerId = container.getId
       executorIdCounter += 1
       val executorId = executorIdCounter.toString
+      val executorGpuDeviceId = container.getGpuDeviceId
 
       assert(container.getResource.getMemory >= resource.getMemory)
 
       logInfo("Launching container %s for on host %s".format(containerId, executorHostname))
       executorIdToContainer(executorId) = container
+      logInfo("[container " + container.getId + "]GPU Device ID: " + executorGpuDeviceId)
 
       val containerSet = allocatedHostToContainersMap.getOrElseUpdate(executorHostname,
         new HashSet[ContainerId])
@@ -348,6 +350,7 @@ private[yarn] class YarnAllocator(
         executorMemory,
         executorCores,
         executorGpuMemory,
+        executorGpuDeviceId,
         appAttemptId.getApplicationId.toString,
         securityMgr)
       if (launchContainers) {

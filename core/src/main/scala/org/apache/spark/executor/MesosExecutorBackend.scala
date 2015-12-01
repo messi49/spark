@@ -67,8 +67,9 @@ private[spark] class MesosExecutorBackend
       Seq[(String, String)](("spark.app.id", frameworkInfo.getId.getValue))
     val conf = new SparkConf(loadDefaults = true).setAll(properties)
     val port = conf.getInt("spark.executor.port", 0)
+    val gpuDeviceId = 0
     val env = SparkEnv.createExecutorEnv(
-      conf, executorId, slaveInfo.getHostname, port, cpusPerTask, isLocal = false)
+      conf, executorId, slaveInfo.getHostname, port, gpuDeviceId, cpusPerTask, isLocal = false)
 
     executor = new Executor(
       executorId,

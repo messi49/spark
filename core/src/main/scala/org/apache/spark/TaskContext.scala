@@ -139,4 +139,9 @@ abstract class TaskContext extends Serializable {
    * Returns the manager for this task's managed memory.
    */
   private[spark] def taskMemoryManager(): TaskMemoryManager
+
+  /**
+   * The GPU Device ID.
+   */
+  def gpuDeviceId(): Int
 }
